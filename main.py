@@ -4,6 +4,7 @@ from hikari import Embed, GatewayBot, Intents, events
 
 class EoD(GatewayBot):
     def __init__(self, token: str):
+        # Add intents for message reactions 
         super().__init__(token, intents=Intents.GUILD_MESSAGE_REACTIONS | Intents.GUILD_MESSAGES)
 
         # wait for ;eod to be sent
@@ -23,11 +24,13 @@ class EoD(GatewayBot):
     
     # Handle reactions being added or removed on the embed
     async def reaction_role(self, event: Union[events.GuildReactionAddEvent, events.GuildReactionDeleteEvent]):
+        
         # Is the reaction on the embed?
         if self.embed_id and event.message_id == self.embed_id:
             # If it is, get the guild and role called EoD
             guild = await event.app.rest.fetch_guild(event.guild_id)
             role = next(filter(lambda k: k[1].name == 'EoD', guild.roles.items()), None)
+            
             if role is None:
                 print(f'EoD role not found for guild {guild.name}')
                 return 
