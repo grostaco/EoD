@@ -5,14 +5,14 @@ from hikari import Embed, GatewayBot, Intents, events
 class EoD(GatewayBot):
     def __init__(self, token: str):
         # Add intents for message reactions 
-        super().__init__(token, intents=Intents.GUILD_MESSAGE_REACTIONS | Intents.GUILD_MESSAGES)
+        super().__init__(token, intents=Intents.GUILDS | Intents.GUILD_MESSAGE_REACTIONS | Intents.GUILD_MESSAGES)
 
         # wait for ;eod to be sent
-        self._event_manager.subscribe(events.GuildMessageCreateEvent, self.send_reaction_embed)
+        self.event_manager.subscribe(events.GuildMessageCreateEvent, self.send_reaction_embed)
 
         # go to self.reaction_role when there's a reaction added or removed
-        self._event_manager.subscribe(events.GuildReactionAddEvent, self.reaction_role)
-        self._event_manager.subscribe(events.GuildReactionDeleteEvent, self.reaction_role)
+        self.event_manager.subscribe(events.GuildReactionAddEvent, self.reaction_role)
+        self.event_manager.subscribe(events.GuildReactionDeleteEvent, self.reaction_role)
         self.embed_id: Optional[int] = None
 
     # Handle ;eod messages then respond with an embed with an ok-hand reaction
@@ -28,8 +28,10 @@ class EoD(GatewayBot):
         # Is the reaction on the embed?
         if self.embed_id and event.message_id == self.embed_id:
             # If it is, get the guild and role called EoD
-            guild = await event.app.rest.fetch_guild(event.guild_id)
-            role = next(filter(lambda k: k[1].name == 'EoD', guild.roles.items()), None)
+            guild = self.cache.get_available_guild(event.guild_id)
+            assert guild 
+            
+            role = next(filter(lambda k: k[1].name == 'EoD', guild.get_roles().items()), None)
             
             if role is None:
                 print(f'EoD role not found for guild {guild.name}')
